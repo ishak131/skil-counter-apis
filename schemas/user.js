@@ -13,6 +13,13 @@ const userSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    lists: {
+        type: [{
+            type: mongoose.ObjectId,
+            ref: 'List',
+        }],
+        default :[]
+    },
     token: {
         type: String,
         required: true
