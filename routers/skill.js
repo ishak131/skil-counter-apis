@@ -80,9 +80,11 @@ skillRouter.delete('/deleteSkill', authinticate, async (req, res) => {
 
 /////////////////////////////////////////////////////////////////////////////////////
 skillRouter.get('/getAllMyLists', authinticate, async (req, res) => {
+    console.log('work');
     try {
         const { user } = req
         const { email } = user
+        console.log(email)
         const getUserDataFromDB = await User.findOne({ email })
         const { lists } = getUserDataFromDB;
         const arrayOfLists = []
