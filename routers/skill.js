@@ -1,9 +1,9 @@
 const express = require('express');
 const { authinticate } = require('./auth');
 const skillRouter = express.Router();
-const List = require('../schemas/list');
-const Skill = require('../schemas/skill');
-const User = require('../schemas/user');
+const List = require('../infrastructure/schemas/ListModel');
+const Skill = require('../infrastructure/schemas/skill');
+const User = require('../infrastructure/schemas/user');
 
 ////////////////////////  create user account //////////////////////////////
 

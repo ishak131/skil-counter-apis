@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../schemas/user')
+const User = require('../infrastructure/schemas/user')
 const express = require('express')
 const authRouter = express.Router();
 
