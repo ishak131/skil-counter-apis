@@ -7,47 +7,28 @@ const listRouter = express.Router();
 listRouter.post('/createNewList', authinticate, async (req, res) => {
     try {
         const { user } = req
-        const { lists } = user
-        if (lists.length > 2)
-            return res.send(402)
         const { listName } = req.body
         const list = new List({
-            listName
+            listName,
+            userId: user._id,
         })
         const savedList = await list.save()
-        await user.updateOne({
-            "$push": {
-                lists: savedList._id
-            }
-        })
-        return res.send("list is add successfully")
-    } catch (err) {
-        console.log(err);
-        return res.json({ message: err })
+        return res.json({ savedList })
+    } catch (error) {
+        return res.status(400).send({ error })
     }
 })
 
 
-
-listRouter.delete('/deleteList', authinticate, async (req, res) => {
+listRouter.delete('/deleteList/:listId', authinticate, async (req, res) => {
     try {
-        const { user } = req
-        const { listId } = req.body
-        const isOwnedByThisUser = user.lists.includes(listId)
-        if (!isOwnedByThisUser)
-            return res.send(404)
+        const { listId } = req.params
         const list = await List.findByIdAndRemove({ _id: listId })
         if (!list)
-            return res.send(404)
-        await user.updateOne({
-            "$pull": {
-                lists: listId
-            }
-        })
+            return res.status(404).send("Not Found")
         return res.send('deleted successfully')
-    } catch (err) {
-        console.log(err);
-        return res.json({ message: err })
+    } catch (error) {
+        return res.status(400).send({ error })
     }
 })
 
@@ -55,19 +36,14 @@ listRouter.delete('/deleteList', authinticate, async (req, res) => {
 
 listRouter.put('/updateListName', authinticate, async (req, res) => {
     try {
-        const { user } = req
         const { listName, listId } = req.body
-        const isOwnedByThisUser = user.lists.includes(listId)
-        if (!isOwnedByThisUser)
-            return res.send(404)
         const upatedList = await List.findByIdAndUpdate({ _id: listId }, { listName })
         if (!upatedList)
             return res.send(404)
-        return res.send({ upatedList })
+        return res.json({ upatedList })
     }
-    catch (err) {
-        console.log(err);
-        return res.json({ message: err })
+    catch (error) {
+        return res.status(400).send({ error })
     }
 })
 

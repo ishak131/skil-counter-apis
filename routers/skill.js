@@ -9,22 +9,17 @@ const User = require('../schemas/user');
 
 skillRouter.post('/createNewSkill', authinticate, async (req, res) => {
     try {
-        const { user } = req
         const { skillName, listId } = req.body
-        const isOwnedByThisUser = user.lists.includes(listId)
-        if (!isOwnedByThisUser)
-            return res.send(404)
         const skill = new Skill({
             skillName
         })
-        const savedSkill = await skill.save()
-        if (!savedSkill)
+        if (!skill)
             return res.send(503)
-        const list = await List.findByIdAndUpdate({ _id: listId }, { $push: { skills: savedSkill._id } })
+        const list = await List.findByIdAndUpdate({ _id: listId }, { $push: { skills: skill } })
         if (!list) {
             return res.send(503)
         }
-        return res.send({ list })
+        return res.send({ skill })
     } catch (error) {
         return res.status(400).send({ error })
     }
@@ -34,22 +29,16 @@ skillRouter.post('/createNewSkill', authinticate, async (req, res) => {
 
 skillRouter.put('/editSkillScore', authinticate, async (req, res) => {
     try {
-        const { user } = req
         const { skillId, listId, skillScore } = req.body
-        const isOwnedByThisUser = user.lists.includes(listId)
-        if (!isOwnedByThisUser)
-            return res.status(404).send('this list is not found in your Lists')
-        const getListFromDB = await List.findById({ _id: listId })
-        const isOwnedByThisList = getListFromDB.skills.includes(skillId);
-        if (!isOwnedByThisList)
-            return res.status(404).send('this Skill is not found in this List')
+        if (!skillId || !listId)
+            return res.status(400).send("can't update the skill")
         const skillScoreParsed = parseInt(skillScore);
         if (skillScoreParsed < 0)
             return res.status(400).send('skill score can not be less than 0');
-        const skill = await Skill.findByIdAndUpdate({ _id: skillId }, { skillScore: parseInt(skillScore) })
-        if (!skill) {
-            return res.send(503).send(' somthing went wrong please try again ')
-        }
+        const skill = await List.updateOne(
+            { _id: listId, 'skills._id': skillId },
+            { '$set': { 'skills.$.skillScore': skillScoreParsed } }
+        )
         return res.send({ skill })
     } catch (error) {
         return res.status(400).send({ error })
@@ -61,18 +50,11 @@ skillRouter.put('/editSkillScore', authinticate, async (req, res) => {
 skillRouter.delete('/deleteSkill/:skillId/:listId', authinticate, async (req, res) => {
 
     try {
-        const { user } = req
         const { skillId, listId } = req.params
-        const isOwnedByThisUser = user.lists.includes(listId)
-        if (!isOwnedByThisUser)
-            return res.status(404).send('this skill is not found')
-        const isFoundList = await List.findByIdAndUpdate({ _id: listId }, { "$pull": { skills: skillId } })
-        if (!isFoundList)
-            return res.status(404).send('this list is not found');
-        const isFoundSkill = await Skill.findByIdAndRemove({ _id: skillId })
-        if (!isFoundSkill)
-            return res.status(404).send('this skill is not found');
-        return res.send('skill is removed successfully')
+        await List.findByIdAndUpdate(
+            { _id: listId },
+            { "$pull": { skills: { _id: skillId } } })
+        return res.send('The skill is deleted successfully ')
     } catch (error) {
         return res.status(400).send({ error })
     }
@@ -85,24 +67,8 @@ skillRouter.get('/getAllMyLists', authinticate, async (req, res) => {
         const { user } = req
         const { email } = user
         const getUserDataFromDB = await User.findOne({ email })
-        const { lists } = getUserDataFromDB;
-        const arrayOfLists = []
-        const listsLength = lists.length;
-        await lists.map(async (listId, listIndex) => {
-            const listData = await List.findById({ _id: listId })
-            const { listName, skills } = listData
-            const skillLength = skills.length;
-            const arrayOfSkills = []
-            await skills.map(async (skillId, skillIndex) => {
-                const skillData = await Skill.findById({ _id: skillId });
-                const { skillName, skillScore } = skillData;
-                arrayOfSkills.push({ skillName, skillScore, skillId })
-                if (listIndex === listsLength - 1 && skillIndex === skillLength - 1)
-                    return res.send({ arrayOfLists })
-            })
-            arrayOfLists.push({ listId, listName, skills: arrayOfSkills })
-        })
-        return
+        const arrayOfLists = await List.find({ userId: getUserDataFromDB._id })
+        return res.json({ arrayOfLists })
     } catch (error) {
         return res.status(400).send({ error })
     }

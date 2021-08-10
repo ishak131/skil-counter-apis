@@ -13,3 +13,4 @@ const skillSchema = mongoose.Schema({
 })
 
 module.exports = mongoose.model('Skill', skillSchema)
+

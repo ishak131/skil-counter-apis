@@ -27,7 +27,6 @@ async function authinticate(req, res, next) {
 authRouter.post('/auth', authinticate, async (req, res) => {
     try {
         const userFroMongoDb = req.user
-        console.log(userFroMongoDb);
         jwt.verify(userFroMongoDb.token, process.env.TOKEN_PRIVATE_KEY, async (err, user) => {
             if (err)
                 return res.status(400).send(err)

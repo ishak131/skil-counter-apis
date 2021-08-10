@@ -13,12 +13,8 @@ const userSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    lists: {
-        type: [{
-            type: mongoose.ObjectId,
-            ref: 'List',
-        }],
-        default :[]
+    imagePath: {
+        type: String,
     },
     token: {
         type: String,
