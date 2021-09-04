@@ -47,7 +47,7 @@ app.get('/', (req, res) => res.send('yes aim working on host 4000'))
 /////////////////// conecting database with apis 
 mongoose.connect(
     process.env.DB_CONECTION,
-    { useNewUrlParser: true },
+    { },
     () => console.log("db is conected")
 );
 
