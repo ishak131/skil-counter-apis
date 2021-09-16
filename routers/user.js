@@ -48,9 +48,9 @@ userRouter.get('/logIn/:email/:password', async (req, res) => {
 userRouter.get('/getUser', authinticate, async (req, res) => {
     try {
         const user = await User.findOne({ email: req.user.email })
-        const { email, fullName } = user
+        const { email, fullName, imagePath } = user
         if (user)
-            return res.send({ email, fullName })
+            return res.send({ email, fullName, imagePath })
     } catch (err) {
         res.send(404)
     }
