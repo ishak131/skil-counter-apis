@@ -10,8 +10,8 @@ require('dotenv/config')
 
 ///////////////////////////// mongodb+srv://skill-counter-api:<password>@cluster0.figsh.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
 const path = require('path');
-const cookieParser = require('cookie-parser');
-const logger = require('morgan');
+//const cookieParser = require('cookie-parser');
+//const logger = require('morgan');
 /////////// pass vGKXKGcd78iOcYjm
 
 const app = express()
@@ -30,7 +30,6 @@ app.use("/list", listRouter)
 app.use("/skill", skillRouter)
 app.use("/upload", uploadRouter)
 app.use("/", authRouter)
-
 /////////////////////////////////////////////////
 
 app.get('/', (req, res) => res.send('yes aim working on host 4000'))
