@@ -1,46 +1,15 @@
 const express = require('express');
-const multer = require('multer');
 const fs = require("fs");
-const { promisify } = require("util");
-const pipeline = promisify(require("stream").pipeline);
 const uploadRouter = express.Router();
 const FileType = require('file-type');
 const User = require('../schemas/user');
 const { authinticate } = require('./auth');
-
-/* GET home page. */
-
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, `${__dirname}/../public/profileImages`)
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-        cb(null, file.fieldname + '-' + uniqueSuffix + "-" + file.originalname)
-    }
-})
-
-const fileFilter = async (req, file, cb) => {
-    console.log(file);
-    if (file.mimetype.includes('image/')) {
-        req.file = file
-        cb(null, true);
-    } else {
-        cb(null, false);
-        return cb(new Error('Only .png, .jpg and .jpeg format allowed!'));
-    }
-}
-
-const uploadWithStorage = multer({
-    storage,
-    fileFilter
-});
+const uploadWithStorage = require('./uploadImages/multerSetup')
 
 function errorHandler(error, req, res, next) {
-    if (error)
+    if (error) {
         return res.status(406).send({ error: error.message });
-    next();
+    } next();
 };
 
 uploadRouter.post('/uploadAvatar', authinticate, uploadWithStorage.single("avatar"), errorHandler, async (req, res) => {
@@ -49,39 +18,33 @@ uploadRouter.post('/uploadAvatar', authinticate, uploadWithStorage.single("avata
             file,
             user
         } = req
-        console.log(req);
         const imagePath = `${__dirname}/../public/profileImages/${file.filename}`
         const { mime } = await FileType.fromFile(imagePath);
         if (!mime.includes('image/')) {
-            fs.unlink(imagePath, (err) => {
-                throw new Error(err)
-            });
+            fs.unlink(imagePath);
             throw new Error('Only .png, .jpg and .jpeg format allowed!');
         }
-        await User.findByIdAndUpdate(user._id, { imagePath })
+        if (user.imagePath) {
+            fs.unlink(`${__dirname}/../public/profileImages/${user.imagePath}`, async (err) => {
+                if (err)
+                    await User.findByIdAndUpdate(user._id, { $unset: { imagePath: 1 } });
+            });
+        }
+        await User.findByIdAndUpdate(user._id, { imagePath: file.filename });
         res.send({ avatarImage: file })
     } catch (error) {
-        console.log(error);
         res.status(400).send({ error: error.message })
     }
 })
 ////////////////////////////////////////////////////////////////
-const upload = multer()
-uploadRouter.post("/upload", upload.single("file"), async function (req, res, next) {
+
+
+uploadRouter.get('/getAvatar', authinticate, (req, res) => {
     try {
-        const {
-            file,
-            body: { name }
-        } = req;
-        if (file.detectedFileExtension != ".jpg") next(new Error("Invalid file type"));
-        const fileName = name + file.detectedFileExtension;
-        await pipeline(
-            file.stream,
-            fs.createWriteStream(`${__dirname}/../public/profileImages/${fileName}`)
-        );
-        res.send("File uploaded as " + fileName);
+        const { imagePath } = req.user
+        res.send({ imagePath });
     } catch (error) {
-        console.log({ error });
+        res.send({ error })
     }
 
 });
