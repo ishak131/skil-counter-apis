@@ -30,7 +30,7 @@ uploadRouter.post('/uploadAvatar', authinticate, uploadWithStorage.single("avata
                     await User.findByIdAndUpdate(user._id, { $unset: { imagePath: 1 } });
             });
         }
-        await User.findByIdAndUpdate(user._id, { imagePath: file.filename });
+        const userWithUpdatedImage = await User.findByIdAndUpdate(user._id, { imagePath: file.filename });
         res.send({ avatarImage: file })
     } catch (error) {
         res.status(400).send({ error: error.message })

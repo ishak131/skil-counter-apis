@@ -42,6 +42,4 @@ mongoose.connect(
     () => console.log("db is conected")
 );
 
-
-
 app.listen(process.env.PORT || 4000)
